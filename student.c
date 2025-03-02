@@ -2,30 +2,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Define structure for Student
 struct Student {
     int id;
     char name[50];
     float marks;
 };
 
-// Function to add a student
+// Function to add a student record
 void addStudent() {
     struct Student s;
     FILE *file = fopen("students.dat", "ab");
 
-    printf("\nEnter Student ID: ");
+    printf("Enter Student ID: ");
     scanf("%d", &s.id);
-    printf("Enter Name: ");
-    scanf(" %[^\n]", s.name);
+    printf("Enter Student Name: ");
+    scanf(" %[^\n]", s.name); // Reads string with spaces
     printf("Enter Marks: ");
     scanf("%f", &s.marks);
 
     fwrite(&s, sizeof(s), 1, file);
     fclose(file);
-    printf("✅ Student added successfully!\n");
+    printf("✅ Student record added successfully!\n");
 }
 
-// Function to view all students
+// Function to view all student records
 void viewStudents() {
     struct Student s;
     FILE *file = fopen("students.dat", "rb");
@@ -36,12 +37,13 @@ void viewStudents() {
     }
 
     printf("\n📜 Student Records:\n");
-    printf("-----------------------------\n");
+    printf("----------------------------------\n");
+
     while (fread(&s, sizeof(s), 1, file)) {
         printf("🆔 ID: %d | 🏷 Name: %s | 📊 Marks: %.2f\n", s.id, s.name, s.marks);
     }
-    printf("-----------------------------\n");
 
+    printf("----------------------------------\n");
     fclose(file);
 }
 
@@ -56,17 +58,17 @@ void searchStudent() {
         return;
     }
 
-    printf("\nEnter Student ID to Search: ");
+    printf("Enter Student ID to search: ");
     scanf("%d", &searchId);
 
     while (fread(&s, sizeof(s), 1, file)) {
         if (s.id == searchId) {
-            printf("✅ Student Found!\n");
-            printf("🆔 ID: %d | 🏷 Name: %s | 📊 Marks: %.2f\n", s.id, s.name, s.marks);
+            printf("✅ Student Found: ID: %d | Name: %s | Marks: %.2f\n", s.id, s.name, s.marks);
             found = 1;
             break;
         }
     }
+
     if (!found) {
         printf("❌ Student with ID %d not found!\n", searchId);
     }
@@ -74,7 +76,7 @@ void searchStudent() {
     fclose(file);
 }
 
-// Function to delete a student by ID
+// Function to delete a student record by ID
 void deleteStudent() {
     struct Student s;
     int deleteId, found = 0;
@@ -86,12 +88,12 @@ void deleteStudent() {
         return;
     }
 
-    printf("\nEnter Student ID to Delete: ");
+    printf("Enter Student ID to delete: ");
     scanf("%d", &deleteId);
 
     while (fread(&s, sizeof(s), 1, file)) {
         if (s.id == deleteId) {
-            printf("✅ Student with ID %d deleted!\n", deleteId);
+            printf("✅ Student with ID %d deleted successfully!\n", deleteId);
             found = 1;
         } else {
             fwrite(&s, sizeof(s), 1, tempFile);
@@ -100,6 +102,7 @@ void deleteStudent() {
 
     fclose(file);
     fclose(tempFile);
+
     remove("students.dat");
     rename("temp.dat", "students.dat");
 
@@ -108,7 +111,55 @@ void deleteStudent() {
     }
 }
 
-// Main menu function
+// Function to export student data to a readable text file
+void exportStudentsToText() {
+    struct Student s;
+    FILE *file = fopen("students.dat", "rb");
+
+    if (!file) {
+        printf("❌ No student records found to export!\n");
+        return;
+    }
+
+    FILE *textFile = fopen("students.txt", "w");
+    fprintf(textFile, "📜 Student Records\n");
+    fprintf(textFile, "-----------------------------\n");
+
+    while (fread(&s, sizeof(s), 1, file)) {
+        fprintf(textFile, "🆔 ID: %d | 🏷 Name: %s | 📊 Marks: %.2f\n", s.id, s.name, s.marks);
+    }
+
+    fprintf(textFile, "-----------------------------\n");
+    fclose(file);
+    fclose(textFile);
+
+    printf("✅ Student records exported to students.txt successfully!\n");
+}
+
+// Function to export student data to a CSV file
+void exportStudentsToCSV() {
+    struct Student s;
+    FILE *file = fopen("students.dat", "rb");
+
+    if (!file) {
+        printf("❌ No student records found to export!\n");
+        return;
+    }
+
+    FILE *csvFile = fopen("students.csv", "w");
+    fprintf(csvFile, "ID,Name,Marks\n");
+
+    while (fread(&s, sizeof(s), 1, file)) {
+        fprintf(csvFile, "%d,%s,%.2f\n", s.id, s.name, s.marks);
+    }
+
+    fclose(file);
+    fclose(csvFile);
+
+    printf("✅ Student records exported to students.csv successfully!\n");
+}
+
+// Main function with menu-driven options
 int main() {
     int choice;
 
@@ -118,7 +169,9 @@ int main() {
         printf("2️⃣ View Students\n");
         printf("3️⃣ Search Student\n");
         printf("4️⃣ Delete Student\n");
-        printf("5️⃣ Exit\n");
+        printf("5️⃣ Export to Text File\n");
+        printf("6️⃣ Export to CSV\n");
+        printf("7️⃣ Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
@@ -127,7 +180,9 @@ int main() {
             case 2: viewStudents(); break;
             case 3: searchStudent(); break;
             case 4: deleteStudent(); break;
-            case 5: exit(0);
+            case 5: exportStudentsToText(); break;
+            case 6: exportStudentsToCSV(); break;
+            case 7: exit(0);
             default: printf("❌ Invalid option! Please try again.\n");
         }
     }
